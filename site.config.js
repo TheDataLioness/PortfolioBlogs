@@ -10,7 +10,12 @@ const CONFIG = {
     github: "",
     instagram: "",
   },
-  projects: [],
+  projects: [
+    {
+      name: `PortfolioWebsite`,
+      href: "https://thedatalioness.github.io",
+    }
+  ],
   // blog setting (required)
   blog: {
     title: "Portfolio Blogs",
