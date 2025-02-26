@@ -6,7 +6,7 @@ const CONFIG = {
     role: "Gameplay programmer / Tech Designer",
     bio: "I create game experiences.",
     email: "d.opdkamp@gmail.com",
-    linkedin: "damy_odk",
+    linkedin: "damyodk",
     github: "",
     instagram: "",
   },
