@@ -5,7 +5,7 @@ import styled from "@emotion/styled"
 const Logo = () => {
   return (
     <StyledWrapper href="https://www.damyodk.com" aria-label="backtoportfolio">
-      Portfolio Blogs of Damy
+      Back to Portfolio
     </StyledWrapper>
   )
 }
