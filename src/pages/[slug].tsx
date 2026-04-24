@@ -34,18 +34,8 @@ function sanitizeData(data: any): any {
   } else if (data && typeof data === "object") {
     return Object.fromEntries(
       Object.entries(data).map(([key, value]) => {
-        if (key === "thumbnail" && value === undefined) {
-          return [key, null];
-        }
-        if (key === "author" && Array.isArray(value)) {
-          return [
-            key,
-            value.map((author) => ({
-              ...author,
-              id: author.id ?? null,
-              name: "Damy"
-            })),
-          ];
+        if (value === undefined) {
+          return [key, null]; // Replace undefined with null
         }
         return [key, sanitizeData(value)];
       })
@@ -65,11 +55,9 @@ export const getStaticProps: GetStaticProps = async (context) => {
   const detailPosts = filterPosts(posts, filter);
   const postDetail = detailPosts.find((t: any) => t.slug === slug);
 
-
-
   const sanitizedPostDetail = sanitizeData(postDetail);
 
-  const recordMap = await getRecordMap(sanitizedPostDetail.id!);
+  const recordMap = await getRecordMap(sanitizedPostDetail?.id ?? null);
 
   const sanitizedData = sanitizeData({
     ...sanitizedPostDetail,
