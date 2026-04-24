@@ -13,18 +13,28 @@ import { TPosts } from "src/types"
 // TODO: react query를 사용해서 처음 불러온 뒤로는 해당데이터만 사용하도록 수정
 export const getPosts = async () => {
   let id = CONFIG.notionConfig.pageId as string
-  const api = new NotionAPI({apiBaseUrl: "https://pie-roundworm-fd6.notion.site/1a65c12abe088053af87c0b63587e8f0"});
+  const api = new NotionAPI()
 
   const response = await api.getPage(id)
   id = idToUuid(id)
-  const collection = (Object.values(response.collection)[0] as any)?.value?.value || (Object.values(response.collection)[0] as any)?.value
+
+  const collectionRaw = Object.values(response.collection)[0]
+  // Handle both old format (Collection) and new format ({ role, value: Collection })
+  const collectionValue = collectionRaw?.value as any
+  const collection = collectionValue?.schema
+    ? collectionValue
+    : collectionValue?.value || collectionValue
+
   const block = response.block
   const schema = collection?.schema
 
-  let rawMetadata = block[id]?.value as any
-  if (rawMetadata?.value) {
-    rawMetadata = rawMetadata.value
+  // Handle new block format where value may be nested: { value: { value: Block, role } }
+  const getBlockValue = (blockId: string) => {
+    const b = block[blockId]?.value as any
+    return b?.type ? b : b?.value || b
   }
+
+  const rawMetadata = getBlockValue(id)
 
   // Check Type
   if (
@@ -38,12 +48,9 @@ export const getPosts = async () => {
     const data = []
     for (let i = 0; i < pageIds.length; i++) {
       const id = pageIds[i]
+      const blockValue = getBlockValue(id)
       const properties = (await getPageProperties(id, block, schema)) || null
       // Add fullwidth, createdtime to properties
-      let blockValue = block[id]?.value as any
-      if (blockValue?.value) {
-        blockValue = blockValue.value
-      }
       properties.createdTime = new Date(
         blockValue?.created_time
       ).toString()
@@ -61,7 +68,6 @@ export const getPosts = async () => {
     })
 
     const posts = data as TPosts
-
     return posts
   }
 }

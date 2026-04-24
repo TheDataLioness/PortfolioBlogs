@@ -27,29 +27,64 @@ export const getStaticPaths = async () => {
   }
 }
 
+// Utility function to sanitize data
+function sanitizeData(data: any): any {
+  if (Array.isArray(data)) {
+    return data.map(sanitizeData);
+  } else if (data && typeof data === "object") {
+    return Object.fromEntries(
+      Object.entries(data).map(([key, value]) => {
+        if (key === "thumbnail" && value === undefined) {
+          return [key, null];
+        }
+        if (key === "author" && Array.isArray(value)) {
+          return [
+            key,
+            value.map((author) => ({
+              ...author,
+              id: author.id ?? null,
+              name: "Damy"
+            })),
+          ];
+        }
+        return [key, sanitizeData(value)];
+      })
+    );
+  }
+  return data;
+}
+
+// Updated getStaticProps
 export const getStaticProps: GetStaticProps = async (context) => {
-  const slug = context.params?.slug
+  const slug = context.params?.slug;
 
-  const posts = await getPosts()
-  const feedPosts = filterPosts(posts)
-  await queryClient.prefetchQuery(queryKey.posts(), () => feedPosts)
+  const posts = await getPosts();
+  const feedPosts = filterPosts(posts);
+  await queryClient.prefetchQuery(queryKey.posts(), () => sanitizeData(feedPosts));
 
-  const detailPosts = filterPosts(posts, filter)
-  const postDetail = detailPosts.find((t: any) => t.slug === slug)
-  const recordMap = await getRecordMap(postDetail?.id!)
+  const detailPosts = filterPosts(posts, filter);
+  const postDetail = detailPosts.find((t: any) => t.slug === slug);
 
-  await queryClient.prefetchQuery(queryKey.post(`${slug}`), () => ({
-    ...postDetail,
+
+
+  const sanitizedPostDetail = sanitizeData(postDetail);
+
+  const recordMap = await getRecordMap(sanitizedPostDetail.id!);
+
+  const sanitizedData = sanitizeData({
+    ...sanitizedPostDetail,
     recordMap,
-  }))
+  });
+
+  await queryClient.prefetchQuery(queryKey.post(`${slug}`), () => sanitizedData);
 
   return {
     props: {
       dehydratedState: dehydrate(queryClient),
     },
     revalidate: CONFIG.revalidateTime,
-  }
-}
+  };
+};
 
 const DetailPage: NextPageWithLayout = () => {
   const post = usePostQuery()

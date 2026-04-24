@@ -1,6 +1,6 @@
-import { Block } from 'notion-types'
+import { CustomBlock } from 'src/types/notion.type'
 
-export const customMapImageUrl = (url: string, block: Block): string => {
+export const customMapImageUrl = (url: string, block: CustomBlock): string => {
   if (!url) {
     throw new Error("URL can't be empty")
   }
@@ -43,12 +43,12 @@ export const customMapImageUrl = (url: string, block: Block): string => {
   }`
 
   const notionImageUrlV2 = new URL(url)
-  let table = block.parent_table === 'space' ? 'block' : block.parent_table
+  let table = block.value.parent_table === 'space' ? 'block' : block.value.parent_table
   if (table === 'collection' || table === 'team') {
     table = 'block'
   }
   notionImageUrlV2.searchParams.set('table', table)
-  notionImageUrlV2.searchParams.set('id', block.id)
+  notionImageUrlV2.searchParams.set('id', block.value.id)
   notionImageUrlV2.searchParams.set('cache', 'v2')
 
   url = notionImageUrlV2.toString()
